@@ -1,182 +1,170 @@
-// script.js
+// SISTEMA ORDINI - PaniNostro
 
 document.addEventListener('DOMContentLoaded', function() {
     const orderForm = document.getElementById('orderForm');
-    const sendEmailBtn = document.getElementById('sendEmailBtn');
+    const surnameInput = document.getElementById('surname');
+    const sandwichSelect = document.getElementById('sandwich');
+    const drinkSelect = document.getElementById('drink');
+    const generatePdfBtn = document.getElementById('generatePdfBtn');
     const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+    const sendEmailBtn = document.getElementById('sendEmailBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
     const ordersTableBody = document.querySelector('#ordersTable tbody');
     const messageArea = document.getElementById('messageArea');
+    const lastResetDateSpan = document.getElementById('lastResetDate');
+    const totalOrdersSpan = document.getElementById('totalOrders');
+    const uniquePaniniSpan = document.getElementById('uniquePanini');
+    const todayOrdersSpan = document.getElementById('todayOrders');
+    const currentYearSpan = document.getElementById('currentYear');
 
-    // Carica gli ordini esistenti dal LocalStorage all'avvio e aggiorna la tabella
-    let allOrders = JSON.parse(localStorage.getItem('paniniOrders')) || [];
-    updateOrdersTable();
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const adminModal = document.getElementById('adminModal');
+    const closeModal = document.querySelector('.modal .close');
+    const openAdminBtn = document.getElementById('openAdminBtn');
+    const adminOrdersList = document.getElementById('adminOrdersList');
 
-    // 1. GESTIONE INVIO DEL SINGOLO ORDINE
-    orderForm.addEventListener('submit', function(event) {
-        event.preventDefault(); // Impedisce il ricaricamento della pagina
+    let allOrders = [];
 
-        // Raccogli i dati dal modulo
-        const surname = document.getElementById('surname').value.trim();
-        const sandwich = document.getElementById('sandwich').value;
-        const drink = document.getElementById('drink').value;
-        const timestamp = new Date().toLocaleString('it-IT');
+    // Inizializza anno
+    currentYearSpan.textContent = new Date().getFullYear();
 
-        // Crea l'oggetto ordine
-        const newOrder = {
-            surname: surname,
-            sandwich: sandwich,
-            drink: drink,
-            timestamp: timestamp
-        };
+    // DARK MODE
+    if(localStorage.getItem('darkMode')==='true') document.body.classList.add('dark-mode');
+    darkModeToggle.addEventListener('click', ()=>{
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+    });
 
-        // Aggiungi l'ordine all'array e salva nel LocalStorage
-        allOrders.push(newOrder);
+    // CARICA ORDINI
+    function loadOrders() {
+        const saved = localStorage.getItem('paniniOrders');
+        if(saved) allOrders = JSON.parse(saved);
+        updateAllDisplays();
+    }
+
+    function saveOrders(){
         localStorage.setItem('paniniOrders', JSON.stringify(allOrders));
+        updateAllDisplays();
+    }
 
-        // Aggiorna la tabella di anteprima
-        updateOrdersTable();
+    // MOSTRA MESSAGGI
+    function showMessage(msg,type='success'){
+        messageArea.innerHTML = msg;
+        messageArea.className = type;
+        messageArea.style.display='block';
+        setTimeout(()=>{messageArea.style.display='none';},3000);
+    }
 
-        // Aggiungi la riga al CSV (nel browser dell'utente)
-        addOrderToCsv(newOrder);
-
-        // Mostra messaggio di conferma
-        showMessage(`Ordine per <strong>${surname}</strong> aggiunto con successo!`, 'success');
-
-        // Resetta il modulo, ma mantiene le selezioni di panino e bevanda se vuoi
+    // AGGIUNGI ORDINE
+    orderForm.addEventListener('submit', e=>{
+        e.preventDefault();
+        const surname = surnameInput.value.trim();
+        const sandwich = sandwichSelect.value;
+        const drink = drinkSelect.value;
+        if(!surname || !sandwich || !drink){ showMessage('Compila tutti i campi!','error'); return; }
+        const newOrder = {id:Date.now(), surname, sandwich, drink, timestamp:new Date().toLocaleString('it-IT')};
+        allOrders.push(newOrder);
+        saveOrders();
         orderForm.reset();
+        surnameInput.focus();
+        showMessage(`Ordine per ${surname} aggiunto!`);
     });
 
-    // 2. FUNZIONE PER AGGIORNARE LA TABELLA DI ANTEPRIMA
-    function updateOrdersTable() {
-        ordersTableBody.innerHTML = ''; // Svuota la tabella
-
-        if (allOrders.length === 0) {
+    // VISUALIZZA ORDINI
+    function updateAllDisplays(){
+        // Tabella
+        ordersTableBody.innerHTML='';
+        allOrders.forEach(o=>{
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="4" style="text-align: center; color: #636e72;">Nessun ordine ancora. Inseriscine uno!</td>`;
-            ordersTableBody.appendChild(row);
-            return;
-        }
-
-        // Mostra gli ultimi 5 ordini (più recenti prima)
-        const recentOrders = [...allOrders].reverse().slice(0, 5);
-        recentOrders.forEach(order => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${order.surname}</td>
-                <td>${order.sandwich}</td>
-                <td>${order.drink}</td>
-                <td>${order.timestamp}</td>
-            `;
+            row.innerHTML=`<td>${o.surname}</td><td>${o.sandwich}</td><td>${o.drink}</td><td>${o.timestamp}</td>`;
             ordersTableBody.appendChild(row);
         });
+        // Statistiche
+        totalOrdersSpan.textContent = allOrders.length;
+        uniquePaniniSpan.textContent = [...new Set(allOrders.map(o=>o.sandwich))].length;
+        todayOrdersSpan.textContent = allOrders.filter(o=>new Date(o.timestamp).toDateString()===new Date().toDateString()).length;
     }
 
-    // 3. FUNZIONE PER AGGIUNGERE UNA RIGA AL FILE CSV (Download)
-    function addOrderToCsv(order) {
-        // Intestazioni del CSV
-        const csvHeaders = ['Cognome', 'Panino', 'Bevanda', 'Data/Ora'];
-        // Crea la riga CSV per questo ordine
-        const csvRow = `"${order.surname}","${order.sandwich}","${order.drink}","${order.timestamp}"`;
+    loadOrders();
 
-        // Controlla se esiste già un file CSV salvato
-        let csvContent = '';
-        const storedCsv = localStorage.getItem('paniniCsvFile');
-
-        if (storedCsv) {
-            // Se il file esiste, aggiungi la nuova riga
-            csvContent = storedCsv + '\n' + csvRow;
-        } else {
-            // Se è il primo ordine, crea il file con le intestazioni
-            csvContent = csvHeaders.join(',') + '\n' + csvRow;
+    // CLEAR ALL
+    clearAllBtn.addEventListener('click', ()=>{
+        if(confirm('Sei sicuro di cancellare tutti gli ordini?')){
+            allOrders=[];
+            saveOrders();
+            showMessage('Tutti gli ordini cancellati','success');
         }
+    });
 
-        // Salva l'intero contenuto CSV nel LocalStorage
-        localStorage.setItem('paniniCsvFile', csvContent);
-    }
+    // GENERA PDF
+    generatePdfBtn.addEventListener('click', ()=>{
+        if(allOrders.length===0){ showMessage('Nessun ordine','error'); return; }
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.text('Ordini PaniNostro',14,15);
+        doc.autoTable({head:[['Cognome','Panino','Bevanda','Data/Ora']], body:allOrders.map(o=>[o.surname,o.sandwich,o.drink,o.timestamp])});
+        doc.save(`ordini_${Date.now()}.pdf`);
+        showMessage('PDF generato!');
+    });
 
-    // 4. FUNZIONE PER SCARICARE IL CSV COMPLETO
-    downloadCsvBtn.addEventListener('click', function() {
-        let csvContent = localStorage.getItem('paniniCsvFile');
-
-        if (!csvContent) {
-            showMessage('Non ci sono ancora ordini da scaricare.', 'error');
-            return;
-        }
-
-        // Crea un blob (file virtuale) e un link per il download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // CSV
+    downloadCsvBtn.addEventListener('click', ()=>{
+        if(allOrders.length===0){ showMessage('Nessun ordine','error'); return; }
+        let csv = 'Cognome,Panino,Bevanda,Data/Ora\n';
+        allOrders.forEach(o=>{
+            csv+=`"${o.surname}","${o.sandwich}","${o.drink}","${o.timestamp}"\n`;
+        });
+        const blob = new Blob([csv], {type:'text/csv'});
         const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-
-        link.setAttribute('href', url);
-        link.setAttribute('download', `ordini_panini_${new Date().toISOString().slice(0,10)}.csv`);
-        link.style.visibility = 'hidden';
-
-        document.body.appendChild(link);
+        link.href=URL.createObjectURL(blob);
+        link.download=`ordini_${Date.now()}.csv`;
         link.click();
-        document.body.removeChild(link);
-
-        showMessage('File CSV scaricato con successo!', 'success');
+        showMessage('CSV scaricato!');
     });
 
-    // 5. INVIO ORDINI VIA EMAIL CON EMAILJS
-    // PRIMA DI TUTTO: registrati su https://www.emailjs.com e configura un servizio email e un template.
-    // Sostituisci questi valori con i tuoi (li trovi sul dashboard di EmailJS)
-    const EMAILJS_USER_ID = 'YOUR_PUBLIC_USER_ID'; // Sostituisci
-    const EMAILJS_SERVICE_ID = 'YOUR_EMAIL_SERVICE_ID'; // Sostituisci (es: service_gmail)
-    const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID'; // Sostituisci (es: template_panini_orders)
-    const DESTINATION_EMAIL = 'xxx@xx.com'; // Sostituisci con l'email del destinatario
-
-    // Inizializza EmailJS con il tuo User ID
-    (function() {
-        emailjs.init(EMAILJS_USER_ID);
-    })();
-
-    sendEmailBtn.addEventListener('click', function() {
-        if (allOrders.length === 0) {
-            showMessage('Non ci sono ordini da inviare.', 'error');
-            return;
-        }
-
-        // Prepara il contenuto dell'email formattando gli ordini
-        let emailBody = '<h2>Riepilogo Ordini Panini</h2><ul>';
-        allOrders.forEach(order => {
-            emailBody += `<li><strong>${order.surname}</strong>: ${order.sandwich} con ${order.drink} (ordinato il: ${order.timestamp})</li>`;
+    // MODAL ADMIN
+    function renderAdminOrders(){
+        adminOrdersList.innerHTML='';
+        allOrders.slice().reverse().forEach(o=>{
+            const div = document.createElement('div');
+            div.className='admin-order';
+            div.innerHTML=`
+                <span>${o.surname} - <input value="${o.sandwich}" data-id="${o.id}" class="edit-sandwich"> - <input value="${o.drink}" data-id="${o.id}" class="edit-drink"></span>
+                <button data-id="${o.id}">Elimina</button>
+            `;
+            adminOrdersList.appendChild(div);
         });
-        emailBody += '</ul>';
-        emailBody += `<p>Totale ordini: <strong>${allOrders.length}</strong></p>`;
 
-        // Parametri per il template EmailJS
-        const templateParams = {
-            to_email: DESTINATION_EMAIL,
-            subject: `Nuovi Ordini Panini - ${new Date().toLocaleDateString('it-IT')}`,
-            message: emailBody,
-            order_count: allOrders.length
-        };
-
-        // Invia l'email utilizzando EmailJS
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-            .then(function(response) {
-                showMessage(`Tutti gli ordini (${allOrders.length}) sono stati inviati con successo a ${DESTINATION_EMAIL}!`, 'success');
-                // Opzionale: resetta gli ordini dopo l'invio
-                // allOrders = [];
-                // localStorage.removeItem('paniniOrders');
-                // localStorage.removeItem('paniniCsvFile');
-                // updateOrdersTable();
-            }, function(error) {
-                showMessage('Errore nell\'invio dell\'email: ' + JSON.stringify(error), 'error');
+        adminOrdersList.querySelectorAll('button').forEach(btn=>{
+            btn.addEventListener('click', e=>{
+                const id = Number(e.target.dataset.id);
+                allOrders = allOrders.filter(o=>o.id!==id);
+                saveOrders();
+                renderAdminOrders();
+                showMessage('Ordine eliminato','success');
             });
-    });
+        });
 
-    // Funzione di utilità per mostrare messaggi
-    function showMessage(text, type) {
-        messageArea.innerHTML = text;
-        messageArea.className = type; // 'success' o 'error'
-        messageArea.style.display = 'block';
-
-        // Nascondi il messaggio dopo 5 secondi
-        setTimeout(() => {
-            messageArea.style.display = 'none';
-        }, 5000);
+        adminOrdersList.querySelectorAll('.edit-sandwich').forEach(input=>{
+            input.addEventListener('change', e=>{
+                const id = Number(e.target.dataset.id);
+                const order = allOrders.find(o=>o.id===id);
+                if(order) { order.sandwich = e.target.value; saveOrders(); showMessage('Panino modificato','success'); }
+            });
+        });
+        adminOrdersList.querySelectorAll('.edit-drink').forEach(input=>{
+            input.addEventListener('change', e=>{
+                const id = Number(e.target.dataset.id);
+                const order = allOrders.find(o=>o.id===id);
+                if(order) { order.drink = e.target.value; saveOrders(); showMessage('Bevanda modificata','success'); }
+            });
+        });
     }
+
+    openAdminBtn.addEventListener('click', ()=>{
+        renderAdminOrders();
+        adminModal.style.display='block';
+    });
+    closeModal.addEventListener('click', ()=> adminModal.style.display='none');
+    window.addEventListener('click', e=>{if(e.target===adminModal) adminModal.style.display='none';});
 });

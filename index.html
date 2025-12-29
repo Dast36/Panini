@@ -3,88 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ordina il tuo Panino</title>
+    <title>PaniNostro - Sistema Ordini</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Collegamento a Font Awesome per le icone (opzionale) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1><i class="fas fa-hamburger"></i> PaniOfficina_Eletrica</h1>
-            <p class="subtitle">Ordina dal Granaio il tuo panino e la tua bevanda non preferita</p>
+            <h1>🍔 Panini Off.Elettrica</h1>
+            <div class="subtitle">Sistema di ordinazione panini Burgo</div>
+            <button id="darkModeToggle" class="btn btn-secondary">🌓 Dark Mode</button>
         </header>
 
-        <form id="orderForm">
-            <!-- Campo per il Cognome (input manuale) -->
-            <div class="form-group">
-                <label for="surname"><i class="fas fa-user"></i> Cognome *</label>
-                <input type="text" id="surname" name="surname" placeholder="Inserisci il tuo cognome" required>
-            </div>
+        <main class="main-content">
+            <section class="form-section">
+                <form id="orderForm">
+                    <div class="form-group">
+                        <label for="surname">Cognome:</label>
+                        <input type="text" id="surname" placeholder="Inserisci cognome">
+                    </div>
+                    <div class="form-group">
+                        <label for="sandwich">Panino:</label>
+                        <select id="sandwich">
+                            <option value="">Seleziona panino</option>
+                            <option value="Crudo e Formaggio">Crudo e Formaggio</option>
+                            <option value="Crudo">Crudo</option>
+                            <option value="Focaccia e mortadella">Focaccia e mortadella</option>
+							<option value="Pizza Rossa">Pizza Rossa</option>
+							<option value="Pizza funghi">Pizza funghi</option>
+							
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="drink">Bevanda:</label>
+                        <select id="drink">
+                            <option value="">Seleziona bevanda</option>
+                            <option value="Acqua">Acqua</option>
+                            <option value="Frizzante">Frizzante</option>
+                            <option value="CocaCola">CocaCola</option>
+							<option value="Aranciata">Aranciata</option>
+                        </select>
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn btn-primary">Aggiungi Ordine</button>
+                        <button type="button" id="generatePdfBtn" class="btn btn-pdf">Genera PDF</button>
+                        <button type="button" id="downloadCsvBtn" class="btn btn-secondary">Scarica CSV</button>
+                        <button type="button" id="clearAllBtn" class="btn btn-danger">Cancella Tutti</button>
+                        <button type="button" id="openAdminBtn" class="btn btn-secondary">Admin Panel</button>
+                    </div>
+                </form>
+                <div id="messageArea"></div>
+            </section>
 
-            <!-- Selezione Panino (dropdown) -->
-            <div class="form-group">
-                <label for="sandwich"><i class="fas fa-bread-slice"></i> Scegli il Panino *</label>
-                <select id="sandwich" name="sandwich" required>
-                    <option value="" disabled selected>-- Seleziona un panino --</option>
-                    <option value="Faccia Crudo e Formaggio">Faccia, Crudo e Formaggio</option>
-                    <option value="Pizza Rossa">Pizza Rossa</option>
-                    <option value="Pizza con Funghi">Pizza con Funghi</option>
-                    <option value="Panino Vegano">Panino Vegano</option>
-                    <option value="Classico con Prosciutto">Classico con Prosciutto</option>
-                </select>
-            </div>
+            <section class="stats-orders">
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-list"></i>
+                        <h3 id="totalOrders">0</h3>
+                        <p>Totale Ordini</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-bread-slice"></i>
+                        <h3 id="uniquePanini">0</h3>
+                        <p>Panini Unici</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calendar-day"></i>
+                        <h3 id="todayOrders">0</h3>
+                        <p>Ordini Oggi</p>
+                    </div>
+                </div>
 
-            <!-- Selezione Bevanda (dropdown) -->
-            <div class="form-group">
-                <label for="drink"><i class="fas fa-glass-cheers"></i> Scegli la Bevanda *</label>
-                <select id="drink" name="drink" required>
-                    <option value="" disabled selected>-- Seleziona una bevanda --</option>
-                    <option value="Acqua Naturale">Acqua Naturale</option>
-                    <option value="Acqua Frizzante">Acqua Frizzante</option>
-                    <option value="Aranciata">Aranciata</option>
-                    <option value="Coca-Cola">Coca-Cola</option>
-                    <option value="Birra">Birra</option>
-                </select>
-            </div>
+                <div class="orders-preview">
+                    <h3><i class="fas fa-clipboard-list"></i> Anteprima Ordini</h3>
+                    <div class="table-container">
+                        <table id="ordersTable">
+                            <thead>
+                                <tr>
+                                    <th>Cognome</th>
+                                    <th>Panino</th>
+                                    <th>Bevanda</th>
+                                    <th>Data/Ora</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
 
-            <!-- Pulsanti -->
-            <div class="button-group">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-plus-circle"></i> Aggiungi Ordine al CSV
-                </button>
-                <button type="button" id="sendEmailBtn" class="btn btn-secondary">
-                    <i class="fas fa-paper-plane"></i> Invia Tutti gli Ordini via Email
-                </button>
-                <button type="button" id="downloadCsvBtn" class="btn btn-outline">
-                    <i class="fas fa-download"></i> Scarica CSV
-                </button>
-            </div>
-        </form>
+        <footer>
+            <p>&copy; <span id="currentYear"></span> PaniOff.elettrica</p>
+            <p class="footer-note">Sistema di gestione ordini ottimizzato per desktop e smartphone byGC</p>
+        </footer>
+    </div>
 
-        <!-- Area per i messaggi di conferma/errore -->
-        <div id="messageArea"></div>
-
-        <!-- Tabella per visualizzare gli ordini in tempo reale (opzionale) -->
-        <div class="orders-preview">
-            <h3><i class="fas fa-list-alt"></i> Ordini Recenti</h3>
-            <table id="ordersTable">
-                <thead>
-                    <tr>
-                        <th>Cognome</th>
-                        <th>Panino</th>
-                        <th>Bevanda</th>
-                        <th>Data/Ora</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Gli ordini verranno inseriti qui dinamicamente da JavaScript -->
-                </tbody>
-            </table>
+    <!-- MODAL ADMIN -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Admin Panel</h2>
+            <p>Modifica o elimina ordini:</p>
+            <div id="adminOrdersList"></div>
         </div>
     </div>
 
-    <!-- Collegamento al file JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>
