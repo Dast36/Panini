@@ -1,116 +1,38 @@
 <!DOCTYPE html>
-<html lang="it">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PaniNostro - Sistema Ordini</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="panini">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>panini</title>
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🍔 Panini Off.Elettrica</h1>
-            <div class="subtitle">Sistema di ordinazione panini Burgo</div>
-            <button id="darkModeToggle" class="btn btn-secondary">🌓 Dark Mode</button>
-        </header>
-
-        <main class="main-content">
-            <section class="form-section">
-                <form id="orderForm">
-                    <div class="form-group">
-                        <label for="surname">Cognome:</label>
-                        <input type="text" id="surname" placeholder="Inserisci cognome">
-                    </div>
-                    <div class="form-group">
-                        <label for="sandwich">Panino:</label>
-                        <select id="sandwich">
-                            <option value="">Seleziona panino</option>
-                            <option value="Crudo e Formaggio">Crudo e Formaggio</option>
-                            <option value="Crudo">Crudo</option>
-                            <option value="Focaccia e mortadella">Focaccia e mortadella</option>
-							<option value="Pizza Rossa">Pizza Rossa</option>
-							<option value="Pizza funghi">Pizza funghi</option>
-							
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="drink">Bevanda:</label>
-                        <select id="drink">
-                            <option value="">Seleziona bevanda</option>
-                            <option value="Acqua">Acqua</option>
-                            <option value="Frizzante">Frizzante</option>
-                            <option value="CocaCola">CocaCola</option>
-							<option value="Aranciata">Aranciata</option>
-                        </select>
-                    </div>
-                    <div class="button-group">
-                        <button type="submit" class="btn btn-primary">Aggiungi Ordine</button>
-                        <button type="button" id="generatePdfBtn" class="btn btn-pdf">Genera PDF</button>
-                        <button type="button" id="downloadCsvBtn" class="btn btn-secondary">Scarica CSV</button>
-                        <button type="button" id="clearAllBtn" class="btn btn-danger">Cancella Tutti</button>
-                        <button type="button" id="openAdminBtn" class="btn btn-secondary">Admin Panel</button>
-                    </div>
-                </form>
-                <div id="messageArea"></div>
-            </section>
-
-            <section class="stats-orders">
-                <div class="quick-stats">
-                    <div class="stat-card">
-                        <i class="fas fa-list"></i>
-                        <h3 id="totalOrders">0</h3>
-                        <p>Totale Ordini</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-bread-slice"></i>
-                        <h3 id="uniquePanini">0</h3>
-                        <p>Panini Unici</p>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-calendar-day"></i>
-                        <h3 id="todayOrders">0</h3>
-                        <p>Ordini Oggi</p>
-                    </div>
-                </div>
-
-                <div class="orders-preview">
-                    <h3><i class="fas fa-clipboard-list"></i> Anteprima Ordini</h3>
-                    <div class="table-container">
-                        <table id="ordersTable">
-                            <thead>
-                                <tr>
-                                    <th>Cognome</th>
-                                    <th>Panino</th>
-                                    <th>Bevanda</th>
-                                    <th>Data/Ora</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <footer>
-            <p>&copy; <span id="currentYear"></span> PaniOff.elettrica</p>
-            <p class="footer-note">Sistema di gestione ordini ottimizzato per desktop e smartphone byGC</p>
-        </footer>
-    </div>
-
-    <!-- MODAL ADMIN -->
-    <div id="adminModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Admin Panel</h2>
-            <p>Modifica o elimina ordini:</p>
-            <div id="adminOrdersList"></div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
